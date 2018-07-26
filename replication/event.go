@@ -5,6 +5,7 @@ import (
 	//"encoding/hex"
 	"fmt"
 	"io"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,12 +23,25 @@ const (
 	PartLogicalTimestampLength = 8
 )
 
+type location struct {
+	pseudoGtid   string
+	pseudoOffset int64
+}
+
+var pseudoLocation = location{}
+var expPseudoGtid = regexp.MustCompile("(?i)^drop view if exists `_pseudo_gtid_`.*")
+
 type BinlogEvent struct {
 	// raw binlog data, including crc32 checksum if exists
 	RawData []byte
 
 	Header *EventHeader
 	Event  Event
+}
+
+func (e *BinlogEvent) Search(w io.Writer) {
+	// e.Header.Search(w)
+	e.Event.Search(w)
 }
 
 func (e *BinlogEvent) Dump(w io.Writer) {
@@ -38,7 +52,7 @@ func (e *BinlogEvent) Dump(w io.Writer) {
 type Event interface {
 	//Dump Event, format like python-mysql-replication
 	Dump(w io.Writer)
-
+	Search(w io.Writer)
 	Decode(data []byte) error
 }
 
@@ -95,6 +109,9 @@ func (h *EventHeader) Decode(data []byte) error {
 	}
 
 	return nil
+}
+
+func (h *EventHeader) Search(w io.Writer) {
 }
 
 func (h *EventHeader) Dump(w io.Writer) {
@@ -190,6 +207,9 @@ func (e *FormatDescriptionEvent) Decode(data []byte) error {
 	return nil
 }
 
+func (h *FormatDescriptionEvent) Search(w io.Writer) {
+}
+
 func (e *FormatDescriptionEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Version: %d\n", e.Version)
 	fmt.Fprintf(w, "Server version: %s\n", e.ServerVersion)
@@ -217,6 +237,9 @@ func (e *RotateEvent) Dump(w io.Writer) {
 	fmt.Fprintln(w)
 }
 
+func (e *RotateEvent) Search(w io.Writer) {
+}
+
 type XIDEvent struct {
 	XID uint64
 
@@ -227,6 +250,9 @@ type XIDEvent struct {
 func (e *XIDEvent) Decode(data []byte) error {
 	e.XID = binary.LittleEndian.Uint64(data)
 	return nil
+}
+
+func (e *XIDEvent) Search(w io.Writer) {
 }
 
 func (e *XIDEvent) Dump(w io.Writer) {
@@ -280,6 +306,14 @@ func (e *QueryEvent) Decode(data []byte) error {
 	return nil
 }
 
+func (e *QueryEvent) Search(w io.Writer) {
+	// fmt.Println(string(e.Query))
+	if expPseudoGtid.MatchString(string(e.Query[:])) {
+		pseudoLocation.pseudoGtid = string(e.Query[:])
+		pseudoLocation.pseudoOffset = 0
+	}
+}
+
 func (e *QueryEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Slave proxy ID: %d\n", e.SlaveProxyID)
 	fmt.Fprintf(w, "Execution time: %d\n", e.ExecutionTime)
@@ -320,6 +354,8 @@ func (e *GTIDEvent) Decode(data []byte) error {
 	return nil
 }
 
+func (e *GTIDEvent) Search(w io.Writer) {
+}
 func (e *GTIDEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Commit flag: %d\n", e.CommitFlag)
 	u, _ := uuid.FromBytes(e.SID)
@@ -343,6 +379,9 @@ func (e *BeginLoadQueryEvent) Decode(data []byte) error {
 	e.BlockData = data[pos:]
 
 	return nil
+}
+
+func (e *BeginLoadQueryEvent) Search(w io.Writer) {
 }
 
 func (e *BeginLoadQueryEvent) Dump(w io.Writer) {
@@ -395,6 +434,9 @@ func (e *ExecuteLoadQueryEvent) Decode(data []byte) error {
 	return nil
 }
 
+func (e *ExecuteLoadQueryEvent) Search(w io.Writer) {
+}
+
 func (e *ExecuteLoadQueryEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Slave proxy ID: %d\n", e.SlaveProxyID)
 	fmt.Fprintf(w, "Execution time: %d\n", e.ExecutionTime)
@@ -420,6 +462,9 @@ func (e *MariadbAnnotateRowsEvent) Decode(data []byte) error {
 	return nil
 }
 
+func (e *MariadbAnnotateRowsEvent) Search(w io.Writer) {
+}
+
 func (e *MariadbAnnotateRowsEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Query: %s\n", e.Query)
 	fmt.Fprintln(w)
@@ -432,6 +477,9 @@ type MariadbBinlogCheckPointEvent struct {
 func (e *MariadbBinlogCheckPointEvent) Decode(data []byte) error {
 	e.Info = data
 	return nil
+}
+
+func (e *MariadbBinlogCheckPointEvent) Search(w io.Writer) {
 }
 
 func (e *MariadbBinlogCheckPointEvent) Dump(w io.Writer) {
@@ -450,6 +498,9 @@ func (e *MariadbGTIDEvent) Decode(data []byte) error {
 	// we don't care commit id now, maybe later
 
 	return nil
+}
+
+func (e *MariadbGTIDEvent) Search(w io.Writer) {
 }
 
 func (e *MariadbGTIDEvent) Dump(w io.Writer) {
@@ -479,6 +530,8 @@ func (e *MariadbGTIDListEvent) Decode(data []byte) error {
 	}
 
 	return nil
+}
+func (e *MariadbGTIDListEvent) Search(w io.Writer) {
 }
 
 func (e *MariadbGTIDListEvent) Dump(w io.Writer) {

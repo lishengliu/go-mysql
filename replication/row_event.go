@@ -183,6 +183,9 @@ func (e *TableMapEvent) decodeMeta(data []byte) error {
 	return nil
 }
 
+func (e *TableMapEvent) Search(w io.Writer) {
+}
+
 func (e *TableMapEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "TableID: %d\n", e.TableID)
 	fmt.Fprintf(w, "TableID size: %d\n", e.tableIDSize)
@@ -817,6 +820,10 @@ func decodeBlob(data []byte, meta uint16) (v []byte, n int, err error) {
 	return
 }
 
+func (e *RowsEvent) Search(w io.Writer) {
+	pseudoLocation.pseudoOffset++
+}
+
 func (e *RowsEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "TableID: %d\n", e.TableID)
 	fmt.Fprintf(w, "Flags: %d\n", e.Flags)
@@ -844,6 +851,9 @@ func (e *RowsQueryEvent) Decode(data []byte) error {
 	//ignore length byte 1
 	e.Query = data[1:]
 	return nil
+}
+
+func (e *RowsQueryEvent) Search(w io.Writer) {
 }
 
 func (e *RowsQueryEvent) Dump(w io.Writer) {

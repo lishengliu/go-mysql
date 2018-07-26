@@ -11,6 +11,9 @@ type GenericEvent struct {
 	Data []byte
 }
 
+func (e *GenericEvent) Search(w io.Writer) {
+}
+
 func (e *GenericEvent) Dump(w io.Writer) {
 	fmt.Fprintf(w, "Event data: \n%s", hex.Dump(e.Data))
 	fmt.Fprintln(w)
