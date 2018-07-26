@@ -3,7 +3,7 @@ package canal
 import (
 	"sync"
 
-	"github.com/siddontang/go-mysql/mysql"
+	"github.com/lishengliu/go-mysql/mysql"
 	"gopkg.in/birkirb/loggers.v1/log"
 )
 

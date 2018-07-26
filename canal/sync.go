@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/juju/errors"
+	"github.com/lishengliu/go-mysql/replication"
 	"github.com/satori/go.uuid"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/replication"
-	"github.com/siddontang/go-mysql/schema"
+	"github.com/lishengliu/go-mysql/mysql"
+	"github.com/lishengliu/go-mysql/schema"
 	"gopkg.in/birkirb/loggers.v1/log"
 )
 

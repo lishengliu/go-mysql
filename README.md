@@ -1,3 +1,8 @@
+####################
+# This is fork of siddongtang's code base, just rename the path and do some slight changes to match our requirements.
+####################
+
+
 # go-mysql
 
 A pure go library to handle MySQL network protocol and replication.
@@ -12,7 +17,7 @@ You can use it as a MySQL slave to sync binlog from master then do something, li
 
 ```go
 import (
-    "github.com/siddontang/go-mysql/replication"
+    "github.com/lishengliu/go-mysql/replication"
     "os"
 )
 // Create a binlog syncer with a unique server id, the server id must be different from other MySQL's. 
@@ -125,7 +130,7 @@ c.SetEventHandler(&MyEventHandler{})
 c.Start()
 ```
 
-You can see [go-mysql-elasticsearch](https://github.com/siddontang/go-mysql-elasticsearch) for how to sync MySQL data into Elasticsearch. 
+You can see [go-mysql-elasticsearch](https://github.com/lishengliu/go-mysql-elasticsearch) for how to sync MySQL data into Elasticsearch. 
 
 ## Client
 
@@ -135,7 +140,7 @@ Client package supports a simple MySQL connection driver which you can use it to
 
 ```go
 import (
-    "github.com/siddontang/go-mysql/client"
+    "github.com/lishengliu/go-mysql/client"
 )
 
 // Connect MySQL at 127.0.0.1:3306, with user root, an empty passowrd and database test
@@ -166,7 +171,7 @@ You can use it to build your own MySQL proxy.
 
 ```go
 import (
-    "github.com/siddontang/go-mysql/server"
+    "github.com/lishengliu/go-mysql/server"
     "net"
 )
 
@@ -211,7 +216,7 @@ package main
 import (
     "database/sql"
 
-    _ "github.com/siddontang/go-mysql/driver"
+    _ "github.com/lishengliu/go-mysql/driver"
 )
 
 func main() {

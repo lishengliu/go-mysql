@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/siddontang/go-mysql/dump"
-	"github.com/siddontang/go-mysql/mysql"
-	"github.com/siddontang/go-mysql/schema"
+	"github.com/lishengliu/go-mysql/dump"
+	"github.com/lishengliu/go-mysql/mysql"
+	"github.com/lishengliu/go-mysql/schema"
 	"gopkg.in/birkirb/loggers.v1/log"
 )
 
