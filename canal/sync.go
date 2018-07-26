@@ -18,6 +18,8 @@ var (
 	expAlterTable  = regexp.MustCompile("(?i)^ALTER\\sTABLE\\s.*?`{0,1}(.*?)`{0,1}\\.{0,1}`{0,1}([^`\\.]+?)`{0,1}\\s.*")
 	expRenameTable = regexp.MustCompile("(?i)^RENAME\\sTABLE\\s.*?`{0,1}(.*?)`{0,1}\\.{0,1}`{0,1}([^`\\.]+?)`{0,1}\\s{1,}TO\\s.*?")
 	expDropTable   = regexp.MustCompile("(?i)^DROP\\sTABLE(\\sIF\\sEXISTS){0,1}\\s`{0,1}(.*?)`{0,1}\\.{0,1}`{0,1}([^`\\.]+?)`{0,1}(?:$|\\s)")
+	expCreateView  = regexp.MustCompile("(?i)^CREATE\\sVIEW\\s.*?`{0,1}(.*?)`{0,1}\\.{0,1}`{0,1}([^`\\.]+?)`{0,1}\\s.*")
+	expDropView    = regexp.MustCompile("(?i)^DROP\\sVIEW(\\sIF\\sEXISTS){0,1}\\s`{0,1}(.*?)`{0,1}\\.{0,1}`{0,1}([^`\\.]+?)`{0,1}($|\\s)")
 )
 
 func (c *Canal) startSyncer() (*replication.BinlogStreamer, error) {
@@ -78,7 +80,7 @@ func (c *Canal) runSyncBinlog() error {
 			}
 		case *replication.RowsEvent:
 			// we only focus row based event
-			err = c.handleRowsEvent(ev)
+			err = c.handleRowsEvent(ev, pos.Name, pos.Pos)
 			if err != nil {
 				e := errors.Cause(err)
 				// if error is not ErrExcludedTable or ErrTableNotExist or ErrMissingTableMeta, stop canal
@@ -126,7 +128,7 @@ func (c *Canal) runSyncBinlog() error {
 				schema []byte
 				table  []byte
 			)
-			regexps := []regexp.Regexp{*expCreateTable, *expAlterTable, *expRenameTable, *expDropTable}
+			regexps := []regexp.Regexp{*expCreateTable, *expAlterTable, *expRenameTable, *expDropTable, *expCreateView, *expDropView}
 			for _, reg := range regexps {
 				mb = reg.FindSubmatch(e.Query)
 				if len(mb) != 0 {
@@ -171,7 +173,7 @@ func (c *Canal) runSyncBinlog() error {
 	return nil
 }
 
-func (c *Canal) handleRowsEvent(e *replication.BinlogEvent) error {
+func (c *Canal) handleRowsEvent(e *replication.BinlogEvent, file_name string, pos uint32) error {
 	ev := e.Event.(*replication.RowsEvent)
 
 	// Caveat: table may be altered at runtime.
@@ -194,7 +196,7 @@ func (c *Canal) handleRowsEvent(e *replication.BinlogEvent) error {
 		return errors.Errorf("%s not supported now", e.Header.EventType)
 	}
 	events := newRowsEvent(t, action, ev.Rows, e.Header)
-	return c.eventHandler.OnRow(events)
+	return c.eventHandler.OnRowPos(events, file_name, pos)
 }
 
 func (c *Canal) FlushBinlog() error {
