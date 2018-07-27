@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/lishengliu/go-mysql/replication"
-	"github.com/satori/go.uuid"
 	"github.com/lishengliu/go-mysql/mysql"
+	"github.com/lishengliu/go-mysql/replication"
 	"github.com/lishengliu/go-mysql/schema"
-	"gopkg.in/birkirb/loggers.v1/log"
+	"github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 var (
@@ -37,7 +37,7 @@ func (c *Canal) startSyncer() (*replication.BinlogStreamer, error) {
 		if err != nil {
 			return nil, errors.Errorf("start sync replication at GTID set %v error %v", gset, err)
 		}
-		log.Infof("start sync binlog at GTID set %v", gset)
+		// log.Infof("start sync binlog at GTID set %v", gset)
 		return s, nil
 	}
 }
@@ -72,7 +72,7 @@ func (c *Canal) runSyncBinlog() error {
 		case *replication.RotateEvent:
 			pos.Name = string(e.NextLogName)
 			pos.Pos = uint32(e.Position)
-			log.Infof("rotate binlog to %s", pos)
+			// log.Infof("rotate binlog to %s", pos)
 			savePos = true
 			force = true
 			if err = c.eventHandler.OnRotate(e); err != nil {
@@ -151,8 +151,8 @@ func (c *Canal) runSyncBinlog() error {
 			savePos = true
 			force = true
 			c.ClearTableCache(schema, table)
-			log.Infof("table structure changed, clear table cache: %s.%s\n", schema, table)
-			if err = c.eventHandler.OnTableChanged(string(schema), string(table)); err != nil {
+			// log.Infof("table structure changed, clear table cache: %s.%s\n", schema, table)
+			if err = c.eventHandler.OnTableChanged(string(schema), string(table), pos.Name, pos.Pos); err != nil {
 				return errors.Trace(err)
 			}
 

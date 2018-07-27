@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/juju/errors"
-	"github.com/satori/go.uuid"
 	"github.com/lishengliu/go-mysql/client"
 	. "github.com/lishengliu/go-mysql/mysql"
-	"gopkg.in/birkirb/loggers.v1/log"
+	"github.com/satori/go.uuid"
+	log "github.com/sirupsen/logrus"
 )
 
 var (

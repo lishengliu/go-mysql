@@ -9,7 +9,7 @@ import (
 	"github.com/lishengliu/go-mysql/dump"
 	"github.com/lishengliu/go-mysql/mysql"
 	"github.com/lishengliu/go-mysql/schema"
-	"gopkg.in/birkirb/loggers.v1/log"
+	log "github.com/sirupsen/logrus"
 )
 
 type dumpParseHandler struct {
