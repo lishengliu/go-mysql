@@ -152,14 +152,18 @@ func (p *BinlogParser) ParseReader(r io.Reader, onEvent OnEventFunc) error {
 			}
 			return errors.Trace(err)
 		}
-
+		fmt.Println("looping...")
 		if done {
+			fmt.Println("finished loop breaking out...")
 			break
 		}
 	}
+	if len(pseudoLocation.pseudoGtid) == 0 && pseudoLocation.pseudoOffset == 0 {
+		// fmt.Println(pseudoLocation.pseudoGtid, pseudoLocation.pseudoOffset, "return not found error")
+		return errors.New("Not Found")
+	}
 	fmt.Println("Pseudo GTID:", pseudoLocation.pseudoGtid)
 	fmt.Println("Row Change Offset:", pseudoLocation.pseudoOffset)
-
 	return nil
 }
 
@@ -195,7 +199,18 @@ func (p *BinlogParser) parseEvent(h *EventHeader, data []byte) (Event, error) {
 		if p.format != nil && p.format.ChecksumAlgorithm == BINLOG_CHECKSUM_ALG_CRC32 {
 			data = data[0 : len(data)-4]
 		}
+		if byte(h.EventType) > byte(0x23) || byte(h.EventType) < byte(0x00) {
+			fmt.Println("xxxxxxx--->>>> invalide event type", byte(h.EventType))
+			// 	go func() {
+			// 		pid := os.Getpid()
+			// 		p, _ := os.FindProcess(pid)
+			// 		p.Signal(os.Interrupt)
 
+			// 		// p.Signal(os.Kill)
+			// 	}()
+		} else {
+			// fmt.Println("--->>>>--->>>>", h.EventType)
+		}
 		if h.EventType == ROTATE_EVENT {
 			e = &RotateEvent{}
 		} else if !p.rawMode {

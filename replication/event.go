@@ -2,6 +2,7 @@ package replication
 
 import (
 	"encoding/binary"
+	"os"
 	//"encoding/hex"
 	"fmt"
 	"io"
@@ -12,8 +13,8 @@ import (
 	"unicode"
 
 	"github.com/juju/errors"
-	"github.com/satori/go.uuid"
 	. "github.com/lishengliu/go-mysql/mysql"
+	"github.com/satori/go.uuid"
 )
 
 const (
@@ -30,6 +31,12 @@ type location struct {
 
 var pseudoLocation = location{}
 var expPseudoGtid = regexp.MustCompile("(?i)^drop view if exists `_pseudo_gtid_`.*")
+
+func signalInterrupt() {
+	pid := os.Getpid()
+	p, _ := os.FindProcess(pid)
+	p.Signal(os.Interrupt)
+}
 
 type BinlogEvent struct {
 	// raw binlog data, including crc32 checksum if exists
@@ -90,6 +97,16 @@ func (h *EventHeader) Decode(data []byte) error {
 	pos += 4
 
 	h.EventType = EventType(data[pos])
+
+	if byte(h.EventType) > byte(0x23) || byte(h.EventType) < byte(0x00) {
+		fmt.Println("xxxxxxx--->>>> invalide event type", byte(h.EventType))
+		// signalInterrupt()
+		go func() {
+			pid := os.Getpid()
+			p, _ := os.FindProcess(pid)
+			p.Signal(os.Interrupt)
+		}()
+	}
 	pos++
 
 	h.ServerID = binary.LittleEndian.Uint32(data[pos:])

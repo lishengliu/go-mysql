@@ -173,7 +173,7 @@ func (c *Canal) Run() error {
 // RunFrom will sync from the binlog position directly, ignore mysqldump.
 func (c *Canal) RunFrom(pos mysql.Position) error {
 	c.master.Update(pos)
-
+	fmt.Println("==>>", pos)
 	return c.Run()
 }
 
