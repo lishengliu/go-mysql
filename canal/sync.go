@@ -98,7 +98,7 @@ func (c *Canal) runSyncBinlog() error {
 			}
 			savePos = true
 			// try to save the position later
-			if err := c.eventHandler.OnXID(pos); err != nil {
+			if err := c.eventHandler.OnXID(pos, ev.Header.Timestamp); err != nil {
 				return errors.Trace(err)
 			}
 		case *replication.MariadbGTIDEvent:
@@ -196,7 +196,7 @@ func (c *Canal) handleRowsEvent(e *replication.BinlogEvent, file_name string, po
 		return errors.Errorf("%s not supported now", e.Header.EventType)
 	}
 	events := newRowsEvent(t, action, ev.Rows, e.Header)
-	return c.eventHandler.OnRowPos(events, file_name, pos)
+	return c.eventHandler.OnRowPos(events, file_name, pos, e.Header.Timestamp)
 }
 
 func (c *Canal) FlushBinlog() error {
